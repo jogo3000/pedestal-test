@@ -33,7 +33,9 @@
        (hiccup.util/raw-string "<!DOCTYPE html>\n")
        [:html
         [:head]
-        [:p "Hello there"]])))
+        [:body
+         [:script {:src "/ws.js"}]
+         [:p "Hello there"]]])))
 
 (defn respond-hello [request]
   {:status 200 :body (main-page)
@@ -65,7 +67,12 @@
 (defn start-dev []
   (reset! server
           (start {::http/join? false
-                  ::http/host "127.0.0.1"})))
+                  ::http/host "127.0.0.1"
+                  ::http/secure-headers
+                  {:content-security-policy-settings
+
+                   "object-src 'none'; script-src 'unsafe-inline' 'unsafe-eval' https: http:;"}
+                  ::http/resource-path "/public"})))
 
 (defn stop-dev []
   (http/stop @server))
