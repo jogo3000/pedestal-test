@@ -5,12 +5,11 @@
             [hiccup.util]
             [io.pedestal.log :as log]
             [io.pedestal.websocket :as ws]
-            [clojure.core.async :as async]))
+            [clojure.core.async :as async]
+            [clojure.data.json :as json]))
 
 (defonce ws-clients (atom {}))
 (defrecord WebsocketSession [id ch])
-
-(def counter (atom 0))
 
 (def ws-paths
   {"/ws" {:on-open (fn [session _]
@@ -39,7 +38,7 @@
         [:body
          [:script {:src "/ws.js"}]
          [:p "Hello there"]
-         [:p "Counter" [:p {:id "counter-id"} (str @counter)]]]])))
+         [:p {:id "live-id"}]]])))
 
 (defn respond-hello [request]
   {:status 200 :body (main-page)
@@ -87,5 +86,16 @@
 
 (comment
   ;; Can test server side update with this
-  (async/put! (->> @ws-clients vals first) "{\"type\": \"REPLACE\", \"html\": \"test message from server\", \"id\": \"counter-id\"}")
+  (async/put! (->> @ws-clients vals first) "{\"type\": \"REPLACE\", \"html\": \"test message from server\", \"id\": \"live-id\"}")
+
+  ;; You can send html too
+  (async/put! (->> @ws-clients vals first)
+              (json/write-str
+               {"type" "REPLACE"
+                "id" "live-id"
+                "html"
+                (str
+                 (h/html [:ul [:li "even"]
+                          [:li "fancier"]
+                          [:li "stuff"]]))}))
 )
