@@ -4,10 +4,13 @@
             [hiccup2.core :as h]
             [hiccup.util]
             [io.pedestal.log :as log]
-            [io.pedestal.websocket :as ws]))
+            [io.pedestal.websocket :as ws]
+            [clojure.core.async :as async]))
 
 (defonce ws-clients (atom {}))
 (defrecord WebsocketSession [id ch])
+
+(def counter (atom 0))
 
 (def ws-paths
   {"/ws" {:on-open (fn [session _]
@@ -35,7 +38,8 @@
         [:head]
         [:body
          [:script {:src "/ws.js"}]
-         [:p "Hello there"]]])))
+         [:p "Hello there"]
+         [:p "Counter" [:p {:id "counter-id"} (str @counter)]]]])))
 
 (defn respond-hello [request]
   {:status 200 :body (main-page)
@@ -80,3 +84,8 @@
 (defn restart []
   (stop-dev)
   (start-dev))
+
+(comment
+  ;; Can test server side update with this
+  (async/put! (->> @ws-clients vals first) "{\"type\": \"REPLACE\", \"html\": \"test message from server\", \"id\": \"counter-id\"}")
+)
