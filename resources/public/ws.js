@@ -6,14 +6,13 @@ let timeoutId = null;
 const keepalive = () => {
     if (timeoutId) {
         console.log("Sending ping");
-        ws.send("ping");
+        ws.send("{\"command\": \"ping\"}");
         timeoutId = setTimeout(keepalive, KEEPALIVE_RATE);
     }
 }
 
 ws.onopen = (event) => {
-    ws.send("Connected to the server");
-
+    ws.send("{\"command\": \"ping\", \"msg\": \"Connected to the server\"}");
     timeoutId = setTimeout(keepalive, KEEPALIVE_RATE);
 }
 
@@ -35,4 +34,15 @@ ws.onmessage = (event) => {
     default:
         console.log(`Unknown message type ${msg.type}`)
     }
+}
+
+
+function formSubmit(event) {
+    event.preventDefault();
+    const msg = Object.fromEntries(new FormData(event.target));
+    const msgjson = JSON.stringify({
+        command: "save-todo",
+        data: msg})
+    console.log(msgjson);
+    ws.send(msgjson)
 }
